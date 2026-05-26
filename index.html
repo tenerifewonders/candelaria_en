@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audioguide Candelaria</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="theme-color" content="#121212">
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    body { margin: 0; font-family: sans-serif; padding-bottom: 60px; /* space for the player */ }
+    #map { height: 50vh; width: 100%; }
+    #audio-list { padding: 15px; list-style: none; margin: 0; }
+    #audio-list li { padding: 12px; border-bottom: 1px solid #ddd; cursor: pointer; transition: all 0.2s ease; }
+    #audio-list li:hover { background: #f0f0f0; }
+    #audio-list li.active-track {
+      background: #e3f2fd;
+      border-left: 5px solid #007bff;
+      font-weight: bold;
+      color: #0056b3;
+    }
+    #audio-player { width: 100%; position: fixed; bottom: 0; left: 0; z-index: 9999; /* so it displays on top in Android */}
+    
+    /* Class to highlight active marker in red */
+    .marker-active {
+      filter: hue-rotate(140deg) saturate(2.5) brightness(0.9) !important;
+      z-index: 1000 !important;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- MAP -->
+  <div id="map"></div>
+
+  <p> 📍
+    <a href="https://www.google.com/maps/dir/28.3513008,-16.3697868/28.3512934,-16.3694216/28.3497505,-16.3690522/28.3516713,-16.3694086" 
+       target="_blank">
+       Google Maps route available
+    </a>
+    <span>(data connection required)</span>
+  </p>
+
+  <p> 📄
+    <a href="EN-CANDELARIA.html" target="_blank">
+       Opening hours and practical tips
+    </a>
+  </p>
+
+  <div id="android-msg" style="display:none; padding: 10px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 5px; margin: 10px;">
+    ➕ <strong> To install the app on Android and use it offline: Click browser menu (three dots) → Add to Home screen / Install</strong>
+  </div>
+
+  <div id="ios-msg" style="display:none; padding: 10px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 5px; margin: 10px;">
+    ➕ <strong> To install the app on your iPhone and use it offline: Share → Add to Home Screen</strong>
+  </div>
+
+  <!-- AUDIO LIST -->
+  <ul id="audio-list">
+
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/0.%20Candelaria-Intro.wav">
+      0. Intro
+    </li>
+
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/1.%20Candelaria.wav">
+      1. Plaza de la Patrona de Canarias
+    </li>
+
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.%20Candelaria.wav">
+      2. Basílica de Nuestra Señora de Candelaria
+    </li>
+
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/3.%20Candelaria.wav">
+      3. Ermita de San Blas and Cave of Achbinico
+    </li>
+
+    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/4.%20Candelaria.wav">
+      4. Camino Real de Candelaria
+    </li>
+
+  </ul>
+
+  <!-- PLAYER -->
+  <audio id="audio-player" controls controlsList="nodownload"></audio>
+
+  <script>
+    // Initialize map
+    const map = L.map('map', {
+      attributionControl: false
+    }).setView([28.3512, -16.3694], 13);
+
+    // Local tiles
+    L.tileLayer('./tiles/{z}/{x}/{y}.png', {
+      minZoom: 11,
+      maxZoom: 14,
+      tileSize: 256
+    }).addTo(map);
+
+    // Dictionary of markers linked by audio URL
+    const markersByAudio = {};
+    let activeMarker = null;
+
+    // Unified function to activate track (audio, list and marker on map)
+    function activateTrack(audioUrl, triggerSource) {
+      const player = document.getElementById("audio-player");
+      
+      // 1) Play audio
+      if (player.src !== audioUrl) {
+        player.src = audioUrl;
+        player.play();
+      } else if (player.paused) {
+        player.play();
+      }
+
+      // 2) Visually activate in the list
+      const items = document.querySelectorAll("#audio-list li");
+      items.forEach(li => {
+        if (li.getAttribute("data-audio") === audioUrl) {
+          li.classList.add("active-track");
+          if (triggerSource !== 'list') {
+            li.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        } else {
+          li.classList.remove("active-track");
+        }
+      });
+
+      // 3) Activate on the map
+      const marker = markersByAudio[audioUrl];
+      if (marker) {
+        // Remove color from previous active marker
+        if (activeMarker && activeMarker._icon) {
+          activeMarker._icon.classList.remove("marker-active");
+        }
+
+        // Assign color to new marker
+        activeMarker = marker;
+        if (marker._icon) {
+          marker._icon.classList.add("marker-active");
+        }
+
+        // If click didn't originate from the marker itself, center map and open popup
+        if (triggerSource !== 'marker') {
+          marker.openPopup();
+          map.setView(marker.getLatLng(), map.getZoom() < 13 ? 13 : map.getZoom(), { animate: true });
+        }
+      }
+    }
+
+    // Load points from GeoJSON
+    fetch('./Candelaria.geojson')
+      .then(res => res.json())
+      .then(data => {
+        L.geoJSON(data, {
+          onEachFeature: (feature, layer) => {
+            const audioUrl = feature.properties.audio;
+            const name = feature.properties.Name;
+
+            layer.bindPopup(name);
+
+            // Store marker in dictionary if it has an audio URL assigned
+            if (audioUrl) {
+              markersByAudio[audioUrl] = layer;
+            }
+
+            layer.on("click", () => {
+              activateTrack(audioUrl, 'marker');
+            });
+          }
+        }).addTo(map);
+      });
+
+    // Activate interaction from the track list
+    const items = document.querySelectorAll("#audio-list li");
+    items.forEach(li => {
+      li.addEventListener("click", () => {
+        const url = li.getAttribute("data-audio");
+        if (url) {
+          activateTrack(url, 'list');
+        }
+      });
+    });
+
+    // Geolocation
+    map.locate({ setView: false });
+
+    map.on('locationfound', e => {
+      L.circleMarker(e.latlng, {
+        radius: 8,
+        color: "#007bff",
+        fillColor: "#3fa0ff",
+        fillOpacity: 0.8
+      }).addTo(map);
+    });
+  </script>
+
+  <!-- Service Worker -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./service-worker.js");
+    }
+  </script>
+
+  <script>
+    if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone) {
+      document.getElementById('ios-msg').style.display = 'block';
+    }
+    if (/android/i.test(navigator.userAgent) && !window.matchMedia('(display-mode: standalone)').matches) {
+      document.getElementById('android-msg').style.display = 'block';
+    }
+  </script>
+
+</body>
+</html>
