@@ -1,4 +1,4 @@
-const CACHE_NAME = "candelaria-en-v4";
+const CACHE_NAME = "candelaria-en-v7";
 
 const ASSETS = [
   "./",
@@ -250,15 +250,27 @@ const TILES = [
   "./tiles/16/29788/27381.png",
   "./tiles/16/29788/27382.png",
   "./tiles/16/29788/27383.png",
+  "./tiles/17/59574/54763.png",
+  "./tiles/17/59574/54764.png",
+  "./tiles/17/59574/54765.png",
+  "./tiles/17/59574/54766.png",
   "./tiles/17/59575/54763.png",
   "./tiles/17/59575/54764.png",
   "./tiles/17/59575/54765.png",
+  "./tiles/17/59575/54766.png",
   "./tiles/17/59576/54763.png",
   "./tiles/17/59576/54764.png",
   "./tiles/17/59576/54765.png",
+  "./tiles/17/59576/54766.png",
   "./tiles/17/59577/54763.png",
   "./tiles/17/59577/54764.png",
   "./tiles/17/59577/54765.png",
+  "./tiles/17/59577/54766.png",
+  "./tiles/18/119149/109527.png",
+  "./tiles/18/119149/109528.png",
+  "./tiles/18/119149/109529.png",
+  "./tiles/18/119149/109530.png",
+  "./tiles/18/119149/109531.png",
   "./tiles/18/119150/109527.png",
   "./tiles/18/119150/109528.png",
   "./tiles/18/119150/109529.png",
