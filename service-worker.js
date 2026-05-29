@@ -1,4 +1,4 @@
-const CACHE_NAME = "candelaria-en-v3";
+const CACHE_NAME = "candelaria-en-v4";
 
 const ASSETS = [
   "./",
@@ -246,8 +246,44 @@ const TILES = [
   "./tiles/15/14894/13692.png",
   "./tiles/16/29787/27381.png",
   "./tiles/16/29787/27382.png",
+  "./tiles/16/29787/27383.png",
   "./tiles/16/29788/27381.png",
-  "./tiles/16/29788/27382.png"
+  "./tiles/16/29788/27382.png",
+  "./tiles/16/29788/27383.png",
+  "./tiles/17/59575/54763.png",
+  "./tiles/17/59575/54764.png",
+  "./tiles/17/59575/54765.png",
+  "./tiles/17/59576/54763.png",
+  "./tiles/17/59576/54764.png",
+  "./tiles/17/59576/54765.png",
+  "./tiles/17/59577/54763.png",
+  "./tiles/17/59577/54764.png",
+  "./tiles/17/59577/54765.png",
+  "./tiles/18/119150/109527.png",
+  "./tiles/18/119150/109528.png",
+  "./tiles/18/119150/109529.png",
+  "./tiles/18/119150/109530.png",
+  "./tiles/18/119150/109531.png",
+  "./tiles/18/119151/109527.png",
+  "./tiles/18/119151/109528.png",
+  "./tiles/18/119151/109529.png",
+  "./tiles/18/119151/109530.png",
+  "./tiles/18/119151/109531.png",
+  "./tiles/18/119152/109527.png",
+  "./tiles/18/119152/109528.png",
+  "./tiles/18/119152/109529.png",
+  "./tiles/18/119152/109530.png",
+  "./tiles/18/119152/109531.png",
+  "./tiles/18/119153/109527.png",
+  "./tiles/18/119153/109528.png",
+  "./tiles/18/119153/109529.png",
+  "./tiles/18/119153/109530.png",
+  "./tiles/18/119153/109531.png",
+  "./tiles/18/119154/109527.png",
+  "./tiles/18/119154/109528.png",
+  "./tiles/18/119154/109529.png",
+  "./tiles/18/119154/109530.png",
+  "./tiles/18/119154/109531.png"
 ];
 
 // Helper to dynamically cache files with tolerance to single failures
