@@ -121,18 +121,35 @@
 
     // Dictionary of markers linked by audio URL
     const markersByAudio = {};
+    const audioAliases = {
+      "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.1.Candelaria.wav":"https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.%20Candelaria.wav",
+      "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.2.Candelaria.wav":"https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.%20Candelaria.wav",
+      "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.3.Candelaria.wav":"https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.%20Candelaria.wav",
+      "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.4.Candelaria.wav":"https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.%20Candelaria.wav",
+      "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.5.Candelaria.wav":"https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.%20Candelaria.wav",
+      "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.6.Candelaria.wav":"https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.%20Candelaria.wav",
+      "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/4.1.Candelaria.wav":"https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/4.%20Candelaria.wav",
+      "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/4.2.Candelaria.wav":"https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/4.%20Candelaria.wav",
+      "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/4.3.Candelaria.wav":"https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/4.%20Candelaria.wav"
+    };
     let activeMarker = null;
 
     // Unified function to activate track (audio, list and marker on map)
     function activateTrack(audioUrl, triggerSource) {
       const player = document.getElementById("audio-player");
       
-      // 1) Play audio
-      if (player.src !== audioUrl) {
-        player.src = audioUrl;
-        player.play();
-      } else if (player.paused) {
-        player.play();
+      // 1) Play audio (except parent sections 2 and 4)
+      const silentStops = [
+        "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.%20Candelaria.wav",
+        "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/4.%20Candelaria.wav"
+      ];
+      if (!silentStops.includes(audioUrl)) {
+        if (player.src !== audioUrl) {
+          player.src = audioUrl;
+          player.play();
+        } else if (player.paused) {
+          player.play();
+        }
       }
 
       // 2) Visually activate in the list
@@ -149,7 +166,7 @@
       });
 
       // 3) Activate on the map
-      const marker = markersByAudio[audioUrl];
+      const marker = markersByAudio[audioAliases[audioUrl] || audioUrl];
       if (marker) {
         // Remove color from previous active marker
         if (activeMarker && activeMarker._icon) {
