@@ -276,44 +276,34 @@ const SUPABASE_URL =
 const SUPABASE_KEY =
 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh6eW1idm5sanVkeXlwZHl1aXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MjExMDYsImV4cCI6MjA5MjA5NzEwNn0.LRCkSCRF-0rDVAFkSvImWUNas21yXHZ29pQYUUZi8RY';
 
-const supabase = window.supabase.createClient(
+const supabaseClient = supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
 
 async function checkLicense() {
-
-  const params =
-    new URLSearchParams(window.location.search);
-
-  const license =
-    params.get("license");
+  const params = new URLSearchParams(window.location.search);
+  const license = params.get("license");
 
   if (!license) {
-    document.body.innerHTML =
-      "<h2 style='padding:30px'>Access denied</h2>";
+    document.body.innerHTML = "<h2 style='padding:30px'>Access denied</h2>";
     return;
   }
 
-  const { data, error } = await supabase
-    .from("licenses")
-    .select("*")
-    .eq("license_code", license)
-    .eq("active", true)
+  const { data, error } = await supabaseClient
+    .from('licenses')
+    .select('*')
+    .eq('license_code', license)
+    .eq('active', true)
     .single();
 
   if (error || !data) {
-    document.body.innerHTML =
-      "<h2 style='padding:30px'>Invalid license</h2>";
+    document.body.innerHTML = "<h2 style='padding:30px'>Invalid license</h2>";
     return;
   }
 
-  if (
-    new Date() >
-    new Date(data.expires_at)
-  ) {
-    document.body.innerHTML =
-      "<h2 style='padding:30px'>License expired</h2>";
+  if (new Date() > new Date(data.expires_at)) {
+    document.body.innerHTML = "<h2 style='padding:30px'>License expired</h2>";
     return;
   }
 
