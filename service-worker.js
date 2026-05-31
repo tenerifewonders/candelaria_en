@@ -1,4 +1,4 @@
-const CACHE_NAME = "candelaria-en-v11";
+const CACHE_NAME = "candelaria-en-v12";
 
 const ASSETS = [
   "./",
