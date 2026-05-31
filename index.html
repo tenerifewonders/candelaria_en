@@ -308,6 +308,13 @@ async function checkLicense() {
   }
 
   document.getElementById("app").style.display = "block";
+  // Ensure map renders correctly after the container becomes visible
+  setTimeout(() => {
+    if (typeof map !== 'undefined') {
+      map.invalidateSize();
+      map.setView([28.3512, -16.3694], 13);
+    }
+  }, 100);
 }
 
 checkLicense();
