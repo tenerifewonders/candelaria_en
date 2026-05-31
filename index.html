@@ -78,10 +78,6 @@
       1. Plaza de la Patrona de Canarias
     </li>
 
-    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.%20Candelaria.wav">
-      2. Basilica of Our Lady of Candelaria
-    </li>
-
     <li class="substop" data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.1.Candelaria.wav">2.1. The sanctuary facing the ocean</li>
     <li class="substop" data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.2.Candelaria.wav">2.2. The mystery of the dark woman</li>
     <li class="substop" data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.3.Candelaria.wav">2.3. Central nave — The path to the Virgin</li>
@@ -91,10 +87,6 @@
 
     <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/3.%20Candelaria.wav">
       3. Ermita de San Blas and Cave of Achbinico
-    </li>
-
-    <li data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/4.%20Candelaria.wav">
-      4. Old Royal Road of Candelaria
     </li>
 
     <li class="substop" data-audio="https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/4.1.Candelaria.wav">4.1. The Road — The Route of Past and Present</li>
@@ -132,6 +124,17 @@
       "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/4.2.Candelaria.wav":"https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/4.%20Candelaria.wav",
       "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/4.3.Candelaria.wav":"https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/4.%20Candelaria.wav"
     };
+
+    // Resolve marker audio to its first sub-audio if defined
+    function resolveMarkerAudio(audioUrl) {
+      for (const [subUrl, parentUrl] of Object.entries(audioAliases)) {
+        if (parentUrl === audioUrl) {
+          return subUrl;
+        }
+      }
+      return audioUrl;
+    }
+
     let activeMarker = null;
 
     // Unified function to activate track (audio, list and marker on map)
@@ -204,7 +207,7 @@
             }
 
             layer.on("click", () => {
-              activateTrack(audioUrl, 'marker');
+              activateTrack(resolveMarkerAudio(audioUrl), 'marker');
             });
           }
         }).addTo(map);
