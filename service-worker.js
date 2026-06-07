@@ -1,4 +1,4 @@
-const CACHE_NAME = "candelaria-en-v12";
+const CACHE_NAME = "candelaria-en-v13";
 
 const ASSETS = [
   "./",
@@ -12,11 +12,18 @@ const ASSETS = [
 ];
 
 const AUDIO_URLS = [
-  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/0.%20Candelaria-Intro.wav",
-  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/1.%20Candelaria.wav",
-  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.%20Candelaria.wav",
-  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/3.%20Candelaria.wav",
-  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/4.%20Candelaria.wav"
+  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/0.%20Candelaria-Intro.mp3",
+  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/1.%20Candelaria.mp3",
+  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.1.Candelaria.mp3",
+  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.2.Candelaria.mp3",
+  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.3.Candelaria.mp3",
+  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.4.Candelaria.mp3",
+  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.5.Candelaria.mp3",
+  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.6.Candelaria.mp3",
+  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/3.%20Candelaria.mp3",
+  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/4.1.Candelaria.mp3",
+  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/4.2.Candelaria.mp3",
+  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/4.3.Candelaria.mp3"
 ];
 
 const TILES = [
@@ -391,7 +398,7 @@ async function handleRangeRequest(request, rangeHeader) {
     headers: {
       'Content-Range': `bytes ${start}-${end}/${totalSize}`,
       'Content-Length': chunk.byteLength.toString(),
-      'Content-Type': cachedResponse.headers.get('Content-Type') || 'audio/wav',
+      'Content-Type': cachedResponse.headers.get('Content-Type') || 'audio/mpeg',
       'Accept-Ranges': 'bytes'
     }
   });
@@ -407,8 +414,8 @@ self.addEventListener("fetch", event => {
 
   const rangeHeader = event.request.headers.get('range');
 
-  // 1) Audio files (Supabase storage or .wav files)
-  if (url.href.includes("supabase.co/storage") || url.pathname.endsWith(".wav")) {
+  // 1) Audio files (Supabase storage or .mp3 files)
+  if (url.href.includes("supabase.co/storage") || url.pathname.endsWith(".mp3")) {
     if (rangeHeader) {
       event.respondWith(handleRangeRequest(event.request, rangeHeader));
     } else {
