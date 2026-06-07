@@ -33,8 +33,76 @@
       filter: hue-rotate(140deg) saturate(2.5) brightness(0.9) !important;
       z-index: 1000 !important;
     }
-
   </style>
+
+<!-- ========================================== -->
+<!-- 🔒 CANDADO DE SEGURIDAD CON LICENCIA       -->
+<!-- ========================================== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // Ocultamos toda la página inmediatamente para que no vean nada sin permiso
+  document.documentElement.style.display = 'none';
+
+  // 1. Pon aquí tu Anon Key pública (La sacas de Supabase > Project Settings > API)
+  const supabaseUrl = 'https://xzymbvnljudyypdyuisf.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh6eW1idm5sanVkeXlwZHl1aXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MjExMDYsImV4cCI6MjA5MjA5NzEwNn0.LRCkSCRF-0rDVAFkSvImWUNas21yXHZ29pQYUUZi8RY';
+  
+  const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+  window.addEventListener('DOMContentLoaded', async () => {
+    const params = new URLSearchParams(window.location.search);
+    const license = params.get('license'); // Busca "?license=LIC-XXXX" en el enlace
+
+    // Si no hay código de licencia en el enlace...
+    if (!license) {
+      mostrarError(
+        "🔒 Restricted Access", 
+        "A valid license code is required to listen to this audio guide.",
+        true // Mostrar botón de compra
+      );
+      return;
+    }
+
+    // 2. Si hay código, le preguntamos a Supabase si esa licencia existe y es válida
+    const { data, error } = await supabaseClient
+      .from('licenses')
+      .select('id')
+      .eq('license_code', license)
+      .single();
+
+    // Si la base de datos dice que hay error o no existe...
+    if (error || !data) {
+      mostrarError(
+        "❌ Invalid License", 
+        "The provided code does not exist or is incorrect.",
+        false
+      );
+      return;
+    }
+
+    // ¡ÉXITO! Si la licencia es válida, encendemos la luz y mostramos la audioguía
+    document.documentElement.style.display = '';
+  });
+
+  // Función auxiliar para dibujar la pantalla de error bonita
+  function mostrarError(titulo, mensaje, mostrarBoton) {
+    // Puedes poner tu enlace de pago genérico de la web aquí
+    const enlaceCompra = "https://tenerifewonders.github.io/"; 
+    
+    document.documentElement.innerHTML = `
+      <div style="font-family: sans-serif; text-align: center; padding: 40px 20px; background-color: #f8f9fa; height: 100vh; box-sizing: border-box;">
+        <div style="background: white; max-width: 400px; margin: 0 auto; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+          <h2 style="color: #2c3e50; margin-top: 0;">${titulo}</h2>
+          <p style="color: #666; line-height: 1.5; margin-bottom: 25px;">${mensaje}</p>
+          ${mostrarBoton ? `<a href="${enlaceCompra}" style="background: #007bff; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; display: inline-block;">Adquirir Audioguía</a>` : ''}
+        </div>
+      </div>
+    `;
+    document.documentElement.style.display = ''; // Mostramos el error
+  }
+</script>
+<!-- ========================================== -->
+
 </head>
 
 <body>
