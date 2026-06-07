@@ -82,6 +82,8 @@
 
     // ¡ÉXITO! Si la licencia es válida, encendemos la luz y mostramos la audioguía
     document.documentElement.style.display = '';
+    // Despertar al mapa para que se dibuje correctamente
+    setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
   });
 
   // Función auxiliar para dibujar la pantalla de error bonita

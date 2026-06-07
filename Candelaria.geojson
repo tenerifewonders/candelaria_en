@@ -6,7 +6,7 @@
       "type": "Feature",
       "properties": {
         "Name": "1. Plaza de la Patrona de Canarias",
-        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/1.%20Candelaria.wav"
+        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/1.%20Candelaria.mp3"
       },
       "geometry": {
         "type": "Point",
@@ -17,7 +17,7 @@
       "type": "Feature",
       "properties": {
         "Name": "2. Basílica de Nuestra Señora de Candelaria",
-        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.%20Candelaria.wav"
+        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.%20Candelaria.mp3"
       },
       "geometry": {
         "type": "Point",
@@ -28,7 +28,7 @@
       "type": "Feature",
       "properties": {
         "Name": "3. Ermita de San Blas and Cave of Achbinico",
-        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/3.%20Candelaria.wav"
+        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/3.%20Candelaria.mp3"
       },
       "geometry": {
         "type": "Point",
@@ -39,7 +39,7 @@
       "type": "Feature",
       "properties": {
         "Name": "4. Camino Real de Candelaria",
-        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/4.%20Candelaria.wav"
+        "audio": "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/4.%20Candelaria.mp3"
       },
       "geometry": {
         "type": "Point",
