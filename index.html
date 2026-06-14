@@ -71,7 +71,7 @@
     if (error || !data) {
       // Si la licencia es falsa o ha sido borrada, la borramos también de la memoria
       localStorage.removeItem('tw_audioguide_license');
-      mostrarError("❌ Invalid License", "The provided license code is invalid or does not exist.", false);
+      mostrarError("❌ Invalid License", "The provided license code is invalid or does not exist.", true);
       return;
     }
 
