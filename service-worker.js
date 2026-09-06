@@ -1,7 +1,7 @@
-const CACHE_NAME = "candelaria-en-v14";
+const CACHE_NAME = "candelaria-en-v16";
 
 const ASSETS = [
-  "./",
+"./",
   "./index.html",
   "./Candelaria.geojson",
   "./manifest.json",
@@ -12,7 +12,7 @@ const ASSETS = [
 ];
 
 const AUDIO_URLS = [
-  "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/0.%20Candelaria-Intro.mp3",
+"https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/0.%20Candelaria-Intro.mp3",
   "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/1.%20Candelaria.mp3",
   "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.1.Candelaria.mp3",
   "https://xzymbvnljudyypdyuisf.supabase.co/storage/v1/object/public/candelaria_en/2.2.Candelaria.mp3",
@@ -325,142 +325,120 @@ const TILES = [
   "./tiles/18/119154/109531.png"
 ];
 
-// Helper to dynamically cache files with tolerance to single failures
-async function cacheListTolerantly(cache, list) {
-  for (const url of list) {
-    try {
-      await cache.add(url);
-    } catch (err) {
-      console.warn("Failed to pre-cache resource:", url, err);
-    }
-  }
-}
+// 1. INSTALL: Pre-cache static assets and all audio files for offline use
+self.addEventListener("install", (e) => {
+  self.skipWaiting();
+  e.waitUntil(
+    caches.open(CACHE_NAME).then(async (cache) => {
+      console.log("[SW] Pre-caching assets and audio for offline...");
+      await cache.addAll(ASSETS).catch(err => console.warn("[SW] Asset pre-cache warning:", err));
+      
+      // Pre-fetch all audio files with clean GET requests (no range header) to ensure 200 OK status
+      for (const url of AUDIO_URLS) {
+        try {
+          const req = new Request(url, { method: "GET" });
+          const res = await fetch(req);
+          if (res && res.status === 200) {
+            await cache.put(url, res);
+          }
+        } catch (err) {
+          console.warn("[SW] Audio pre-cache warning for:", url, err);
+        }
+      }
 
-// Install SW and cache assets
-self.addEventListener("install", event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(async cache => {
-      // 1) Critical resources (must succeed)
-      await cache.addAll(ASSETS);
-      // 2) Tolerant caching in the background
-      cacheListTolerantly(cache, AUDIO_URLS);
-      cacheListTolerantly(cache, TILES);
+      // Pre-cache tiles if available
+      if (TILES.length > 0) {
+        await cache.addAll(TILES).catch(err => console.warn("[SW] Tiles pre-cache warning:", err));
+      }
     })
   );
-  self.skipWaiting();
 });
 
-// Activate SW and clean old caches
-self.addEventListener("activate", event => {
-  event.waitUntil(
-    caches.keys().then(keys =>
+// 2. ACTIVATE: Clean old caches & claim clients
+self.addEventListener("activate", (e) => {
+  e.waitUntil(
+    caches.keys().then((keys) =>
       Promise.all(
-        keys
-          .filter(key => key !== CACHE_NAME)
-          .map(key => caches.delete(key))
+        keys.map((key) => {
+          if (key !== CACHE_NAME) return caches.delete(key);
+        })
       )
-    )
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// Helper for HTTP 206 Range Requests for audio streaming/seeking on iOS
-async function handleRangeRequest(request, rangeHeader) {
-  const cachedResponse = await caches.match(request.url);
-  
-  if (!cachedResponse) {
-    // If not cached, do direct pass-through and download full response in background
-    const cleanRequest = new Request(request.url);
-    fetch(cleanRequest).then(networkResponse => {
-      if (networkResponse.status === 200) {
-        caches.open(CACHE_NAME).then(cache => cache.put(request.url, networkResponse));
-      }
-    }).catch(err => console.warn("Background fetch failed:", err));
+// 3. FETCH: Smart Cache & HTTP Range Request handler for HTML5 <audio> offline playback
+self.addEventListener("fetch", (e) => {
+  const url = e.request.url;
 
-    return fetch(request);
-  }
-
-  const arrayBuffer = await cachedResponse.arrayBuffer();
-  const totalSize = arrayBuffer.byteLength;
-
-  const bytes = /^bytes=(\d+)-(\d+)?$/.exec(rangeHeader);
-  if (!bytes) {
-    return cachedResponse;
-  }
-
-  const start = Number(bytes[1]);
-  const end = bytes[2] ? Number(bytes[2]) : totalSize - 1;
-  const chunk = arrayBuffer.slice(start, end + 1);
-
-  return new Response(chunk, {
-    status: 206,
-    statusText: 'Partial Content',
-    headers: {
-      'Content-Range': `bytes ${start}-${end}/${totalSize}`,
-      'Content-Length': chunk.byteLength.toString(),
-      'Content-Type': cachedResponse.headers.get('Content-Type') || 'audio/mpeg',
-      'Accept-Ranges': 'bytes'
-    }
-  });
-}
-
-// Fetch interception
-self.addEventListener("fetch", event => {
-  const url = new URL(event.request.url);
-  
-  if (event.request.method !== 'GET' || (url.protocol !== 'http:' && url.protocol !== 'https:')) {
+  // Intercept audio requests (MP3s) or Supabase audio storage URLs
+  if (url.endsWith(".mp3") || url.includes("supabase.co/storage/v1/object/public/")) {
+    e.respondWith(handleAudioFetch(e.request));
     return;
   }
 
-  const rangeHeader = event.request.headers.get('range');
-
-  // 1) Audio files (Supabase storage or .mp3 files)
-  if (url.href.includes("supabase.co/storage") || url.pathname.endsWith(".mp3")) {
-    if (rangeHeader) {
-      event.respondWith(handleRangeRequest(event.request, rangeHeader));
-    } else {
-      event.respondWith(
-        caches.match(event.request.url).then(cached => {
-          return cached || fetch(event.request).then(response => {
-            if (response.status === 200) {
-              const responseToCache = response.clone();
-              caches.open(CACHE_NAME).then(cache => cache.put(event.request.url, responseToCache));
-            }
-            return response;
-          });
-        })
-      );
-    }
-    return;
-  }
-
-  // 2) JSON / GeoJSON (Network-first style)
-  if (url.pathname.endsWith(".json") || url.pathname.endsWith(".geojson")) {
-    event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          if (response.status === 200) {
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
-          }
-          return response;
-        })
-        .catch(() => caches.match(event.request))
-    );
-    return;
-  }
-
-  // 3) Static assets (Cache-first)
-  event.respondWith(
-    caches.match(event.request).then(cached => {
-      if (cached) return cached;
-      return fetch(event.request).then(networkResponse => {
-        if (networkResponse.status === 200 || networkResponse.status === 0) {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
+  // Standard static assets & tiles
+  e.respondWith(
+    caches.match(e.request).then((cachedRes) => {
+      if (cachedRes) return cachedRes;
+      return fetch(e.request).then((netRes) => {
+        if (!netRes || netRes.status !== 200) {
+          return netRes;
         }
-        return networkResponse;
+        const resToCache = netRes.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(e.request, resToCache));
+        return netRes;
+      }).catch(() => {
+        if (e.request.mode === "navigate") {
+          return caches.match("./index.html");
+        }
       });
     })
   );
 });
+
+// Helper: Handle HTTP Range Requests for cached audio files (iOS Safari & Android Chrome)
+async function handleAudioFetch(request) {
+  const cache = await caches.open(CACHE_NAME);
+  let response = await cache.match(request.url);
+
+  // If not cached yet, fetch online with clean GET
+  if (!response) {
+    try {
+      const cleanReq = new Request(request.url, { method: "GET" });
+      const netRes = await fetch(cleanReq);
+      if (netRes && netRes.status === 200) {
+        await cache.put(request.url, netRes.clone());
+        response = netRes;
+      } else {
+        return netRes;
+      }
+    } catch (err) {
+      console.error("[SW] Audio offline & not cached:", request.url);
+      return new Response("Audio offline not available", { status: 503 });
+    }
+  }
+
+  // Handle Range Header for HTML5 <audio>
+  const rangeHeader = request.headers.get("range");
+  if (rangeHeader && response) {
+    const arrayBuffer = await response.clone().arrayBuffer();
+    const bytes = rangeHeader.replace(/bytes=/, "").split("-");
+    const start = parseInt(bytes[0], 10) || 0;
+    const end = bytes[1] ? parseInt(bytes[1], 10) : arrayBuffer.byteLength - 1;
+    const chunk = arrayBuffer.slice(start, end + 1);
+
+    return new Response(chunk, {
+      status: 206,
+      statusText: "Partial Content",
+      headers: new Headers({
+        "Content-Range": `bytes ${start}-${end}/${arrayBuffer.byteLength}`,
+        "Content-Length": chunk.byteLength,
+        "Content-Type": "audio/mpeg",
+        "Accept-Ranges": "bytes"
+      })
+    });
+  }
+
+  return response;
+}
